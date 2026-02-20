@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skin Template Cleaner</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#0f172a;
+  color:white;
+}
+
+.container{
+  max-width:500px;
+  margin:auto;
+  padding:20px;
+}
+
+.card{
+  background:#1e293b;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:20px;
+  border:1px solid #334155;
+}
+
+button{
+  cursor:pointer;
+  border:none;
+  border-radius:10px;
+  padding:10px;
+  font-weight:bold;
+}
+
+.primary{
+  background:#2563eb;
+  color:white;
+  width:100%;
+}
+
+.yellow{
+  background:#eab308;
+  color:black;
+  width:100%;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px;
+  color: white;
+}
+
+.template-btn{
+  border:2px solid #334155;
+  background:#0f172a;
+  padding:5px;
+}
+
+.template-btn.active{
+  border:2px solid #eab308;
+  background:#eab30822;
+}
+
+.template-btn img{
+  width:100%;
+  image-rendering:pixelated;
+}
+
+.upload-area{
+  border:2px dashed #334155;
+  padding:20px;
+  text-align:center;
+}
+
+.status{
+  padding:10px;
+  border-radius:8px;
+  margin-bottom:10px;
+}
+
+.error{ background:#7f1d1d; }
+.success{ background:#064e3b; }
+
+#resultImage{
+  width:100%;
+  image-rendering:pixelated;
+  border-radius:8px;
+  margin-top:10px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h2>Skin Template Cleaner</h2>
+
+<div class="card">
+<h3>Pilih Template</h3>
+<div class="grid" id="templateList"></div>
+</div>
+
+<div class="card" id="characterSection" style="display:none;">
+<h3>Pilih Karakter</h3>
+<div class="grid">
+  <button class="template-btn char-btn" id="alexBtn" onclick="selectCharacter('alex')" style="color:white;">Alex</button>
+  <button class="template-btn char-btn" id="steveBtn" onclick="selectCharacter('steve')" style="color:white;">Steve</button>
+</div>
+</div>
+
+<div class="card">
+<h3>Upload Skin</h3>
+<div class="upload-area">
+<input type="file" id="fileInput" accept="image/png">
+</div>
+</div>
+
+<div id="statusBox"></div>
+<button class="primary" onclick="processSkin()">Proses</button>
+
+<div class="card" id="resultSection" style="display:none;">
+<h3>Hasil PNG</h3>
+<img id="resultImage">
+<br><br>
+<button class="yellow" onclick="downloadSkin()">Download</button>
+</div>
+
+<canvas id="processCanvas" style="display:none;"></canvas>
+
+</div>
+
+<script>
+
+const templates = [
+  {
+    id:1,
+    name:"Jaket",
+    alex:"jaket-alex.png",
+    steve:"jaket-steve.png"
+  },
+  {
+    id:2,
+    name:"Koko",
+    alex:"koko-alex.png",
+    steve:"koko-steve.png"
+  },
+  {
+    id:3,
+    name:"Jubah",
+    alex:"jubah-alex.png",
+    steve:"jubah-steve.png"
+  },
+  {
+    id:4,
+    name:"Gamis",
+    alex:"gamis-alex.png",
+    steve:"gamis-steve.png"
+  }
+];
+
+let selectedTemplate = null;
+let selectedCharacter = null;
+let selectedFile = null;
+let resultDataURL = null;
+let detectedResolution = 64;
+
+const templateList = document.getElementById("templateList");
+
+// ==========================
+// RENDER TEMPLATE BUTTON
+// ==========================
+templates.forEach(t => {
+  const btn = document.createElement("div");
+  btn.className = "template-btn";
+  btn.innerHTML = `
+    <div style="font-size:12px;text-align:center">${t.name}</div>
+  `;
+  btn.onclick = () => {
+    document.querySelectorAll(".template-btn")
+      .forEach(b=>b.classList.remove("active"));
+
+    btn.classList.add("active");
+    selectedTemplate = t;
+
+    // tampilkan pilihan alex/steve
+    document.getElementById("characterSection").style.display="block";
+  };
+  templateList.appendChild(btn);
+});
+
+// ==========================
+// PILIH KARAKTER
+// ==========================
+function selectCharacter(type){
+  selectedCharacter = type;
+
+  document.querySelectorAll(".char-btn")
+    .forEach(b=>b.classList.remove("active"));
+
+  document.getElementById(type+"Btn").classList.add("active");
+}
+
+// ==========================
+document.getElementById("fileInput").addEventListener("change", e=>{
+  selectedFile = e.target.files[0];
+});
+
+// ==========================
+// PROSES
+// ==========================
+function processSkin(){
+
+  const statusBox = document.getElementById("statusBox");
+  statusBox.innerHTML="";
+
+  if(!selectedTemplate){
+    statusBox.innerHTML='<div class="status error">Pilih template dulu!</div>';
+    return;
+  }
+
+  if(!selectedCharacter){
+    statusBox.innerHTML='<div class="status error">Pilih Alex atau Steve!</div>';
+    return;
+  }
+
+  if(!selectedFile){
+    statusBox.innerHTML='<div class="status error">Upload skin dulu!</div>';
+    return;
+  }
+
+  const skinImg = new Image();
+  skinImg.src = URL.createObjectURL(selectedFile);
+
+  skinImg.onload = () => {
+
+    if(skinImg.width === 64 && skinImg.height === 64){
+      detectedResolution = 64;
+    }else if(skinImg.width === 128 && skinImg.height === 128){
+      detectedResolution = 128;
+    }else{
+      statusBox.innerHTML='<div class="status error">Skin harus 64x64 atau 128x128!</div>';
+      return;
+    }
+
+    const templateImg = new Image();
+    templateImg.crossOrigin="anonymous";
+
+    // ==========================
+    // PILIH FILE BERDASARKAN KARAKTER
+    // ==========================
+    templateImg.src = selectedTemplate[selectedCharacter];
+
+    templateImg.onload = () => {
+
+      const canvas = document.getElementById("processCanvas");
+      const ctx = canvas.getContext("2d");
+
+      canvas.width = skinImg.width;
+      canvas.height = skinImg.height;
+
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(skinImg,0,0);
+
+      const m = detectedResolution === 64 ? 1 : 2;
+
+      // ===============================
+      // HAPUS TOTAL LAYER 2
+      // ===============================
+      ctx.clearRect(16*m,32*m,40*m,16*m);
+      ctx.clearRect(40*m,32*m,16*m,16*m);
+      ctx.clearRect(48*m,48*m,16*m,16*m);
+      ctx.clearRect(0*m,32*m,16*m,16*m);
+      ctx.clearRect(16*m,48*m,16*m,16*m);
+      ctx.clearRect(0*m,48*m,16*m,16*m);
+
+      // ===============================
+      // TIMPA TEMPLATE
+      // ===============================
+      ctx.drawImage(templateImg,0,0,canvas.width,canvas.height);
+
+      resultDataURL = canvas.toDataURL("image/png");
+
+      document.getElementById("resultImage").src = resultDataURL;
+      document.getElementById("resultSection").style.display="block";
+
+      statusBox.innerHTML='<div class="status success">Selesai! Template '+selectedCharacter.toUpperCase()+' dipasang.</div>';
+    };
+  };
+}
+
+function downloadSkin(){
+  const link = document.createElement("a");
+  link.download = "Skin-Baru.png";
+  link.href = resultDataURL;
+  link.click();
+}
+
+</script>
+</body>
+</html>
