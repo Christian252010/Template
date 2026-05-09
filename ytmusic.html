@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>YT Audio Player</title>
+<title>YT Player</title>
 
 <style>
 body{
@@ -33,90 +33,59 @@ button{
 </head>
 <body>
 
-<h2>YouTube Audio Player</h2>
+<h2>YouTube Player</h2>
 
 <input
 id="url"
 placeholder="Paste URL YouTube">
 
-<button id="playBtn">
-PLAY AUDIO
+<button onclick="playYT()">
+PLAY
 </button>
 
-<p id="status">Loading API...</p>
+<p id="status">Siap</p>
 
 <div id="player"></div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
 let player;
 
-// status
-const statusText =
-document.getElementById("status");
+function getId(url){
 
-// load script youtube manual
-const tag = document.createElement('script');
-
-tag.src =
-"https://www.youtube.com/iframe_api";
-
-document.body.appendChild(tag);
-
-// function GLOBAL wajib
-window.onYouTubeIframeAPIReady = function(){
-
-  statusText.innerText =
-  "API YouTube siap";
-}
-
-// ambil ID video
-function getVideoId(url){
-
-  const regExp =
+  const reg =
   /(?:youtube\.com.*(?:\?|&)v=|youtu\.be\/)([^&]+)/;
 
-  const match = url.match(regExp);
+  const match = url.match(reg);
 
   return match ? match[1] : null;
 }
 
-// tombol play
-document
-.getElementById("playBtn")
-.addEventListener("click", ()=>{
-
-  // cek API
-  if(typeof YT === "undefined"
-     || typeof YT.Player === "undefined"){
-
-    alert("API YouTube belum selesai dimuat");
-    return;
-  }
+function playYT(){
 
   const url =
   document.getElementById("url").value;
 
-  const videoId =
-  getVideoId(url);
+  const videoId = getId(url);
 
   if(!videoId){
 
-    alert("URL tidak valid");
+    alert("URL salah");
     return;
   }
 
-  statusText.innerText =
-  "Memutar audio...";
+  document.getElementById("status")
+  .innerText = "Loading...";
 
   // hapus player lama
   document.getElementById("player")
   .innerHTML = "";
 
-  // buat player
   player = new YT.Player('player', {
 
-    height:'1',
-    width:'1',
+    height:'300',
+    width:'100%',
 
     videoId:videoId,
 
@@ -125,22 +94,31 @@ document
     },
 
     events:{
-      onReady:(event)=>{
 
+      onReady:function(event){
+
+        // unmute penting
+        event.target.unMute();
+
+        // volume
+        event.target.setVolume(100);
+
+        // play
         event.target.playVideo();
 
-        statusText.innerText =
-        "Audio sedang diputar";
+        document.getElementById("status")
+        .innerText = "Sedang diputar";
       },
 
-      onError:()=>{
+      onError:function(e){
 
-        statusText.innerText =
-        "Video gagal diputar";
+        document.getElementById("status")
+        .innerText =
+        "Error code: " + e.data;
       }
     }
   });
-});
+}
 </script>
 
 </body>
