@@ -4,16 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Background Music Player</title>
-
-<!-- PWA -->
-<link rel="manifest" href="manifest.json">
-
-<meta name="theme-color" content="#111111">
+<title>YT Background Audio</title>
 
 <style>
 body{
-  margin:0;
   background:#111;
   color:white;
   font-family:Arial;
@@ -23,29 +17,20 @@ body{
 .card{
   max-width:500px;
   margin:auto;
-  background:#1c1c1c;
+  background:#1e1e1e;
   padding:20px;
   border-radius:20px;
 }
 
-h2{
-  text-align:center;
-}
-
-input{
+input,button{
   width:100%;
   padding:14px;
+  margin-top:10px;
   border:none;
   border-radius:10px;
-  margin-top:10px;
 }
 
 button{
-  width:100%;
-  padding:14px;
-  margin-top:10px;
-  border:none;
-  border-radius:10px;
   background:red;
   color:white;
   font-size:16px;
@@ -72,17 +57,14 @@ iframe{
 <h2>YouTube Background Player</h2>
 
 <input
-type="text"
 id="url"
 placeholder="Paste URL YouTube">
 
-<button onclick="playMusic()">
-PLAY MUSIC
+<button onclick="playYT()">
+PLAY
 </button>
 
-<p id="status">
-Siap memutar
-</p>
+<p id="status">Siap</p>
 
 <div id="player"></div>
 
@@ -90,17 +72,16 @@ Siap memutar
 
 <script>
 
-// Media Session API
-if ('mediaSession' in navigator) {
+// media session
+if('mediaSession' in navigator){
 
   navigator.mediaSession.metadata =
   new MediaMetadata({
-    title: 'Music Player',
-    artist: 'Web Player'
+    title:'YT Background Audio',
+    artist:'Web App'
   });
 }
 
-// ambil id youtube
 function getVideoId(url){
 
   const reg =
@@ -111,13 +92,12 @@ function getVideoId(url){
   return match ? match[1] : null;
 }
 
-function playMusic(){
+function playYT(){
 
   const url =
   document.getElementById("url").value;
 
-  const id =
-  getVideoId(url);
+  const id = getVideoId(url);
 
   if(!id){
 
@@ -126,30 +106,17 @@ function playMusic(){
   }
 
   document.getElementById("status")
-  .innerText =
-  "Memutar audio...";
+  .innerText = "Memutar...";
 
-  // embed youtube
   document.getElementById("player")
   .innerHTML = `
   <iframe
-    src="https://www.youtube.com/embed/${id}?autoplay=1&playsinline=1"
+    src="https://www.youtube.com/embed/${id}?autoplay=1&mute=0&playsinline=1"
     allow="autoplay; encrypted-media"
     allowfullscreen>
   </iframe>
   `;
 }
-
-// register service worker
-if('serviceWorker' in navigator){
-
-  navigator.serviceWorker
-  .register('sw.js')
-  .then(()=>{
-    console.log("SW aktif");
-  });
-}
-
 </script>
 
 </body>
