@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>YT Audio Player</title>
+
+<style>
+body{
+  background:#111;
+  color:white;
+  font-family:Arial;
+  padding:20px;
+}
+
+input,button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+}
+
+button{
+  background:red;
+  color:white;
+  border:none;
+}
+
+#player{
+  margin-top:20px;
+}
+</style>
+</head>
+<body>
+
+<h2>YouTube Audio Player</h2>
+
+<input
+id="url"
+placeholder="Paste URL YouTube">
+
+<button id="playBtn">
+PLAY AUDIO
+</button>
+
+<p id="status">Loading API...</p>
+
+<div id="player"></div>
+
+<script>
+let player;
+
+// status
+const statusText =
+document.getElementById("status");
+
+// load script youtube manual
+const tag = document.createElement('script');
+
+tag.src =
+"https://www.youtube.com/iframe_api";
+
+document.body.appendChild(tag);
+
+// function GLOBAL wajib
+window.onYouTubeIframeAPIReady = function(){
+
+  statusText.innerText =
+  "API YouTube siap";
+}
+
+// ambil ID video
+function getVideoId(url){
+
+  const regExp =
+  /(?:youtube\.com.*(?:\?|&)v=|youtu\.be\/)([^&]+)/;
+
+  const match = url.match(regExp);
+
+  return match ? match[1] : null;
+}
+
+// tombol play
+document
+.getElementById("playBtn")
+.addEventListener("click", ()=>{
+
+  // cek API
+  if(typeof YT === "undefined"
+     || typeof YT.Player === "undefined"){
+
+    alert("API YouTube belum selesai dimuat");
+    return;
+  }
+
+  const url =
+  document.getElementById("url").value;
+
+  const videoId =
+  getVideoId(url);
+
+  if(!videoId){
+
+    alert("URL tidak valid");
+    return;
+  }
+
+  statusText.innerText =
+  "Memutar audio...";
+
+  // hapus player lama
+  document.getElementById("player")
+  .innerHTML = "";
+
+  // buat player
+  player = new YT.Player('player', {
+
+    height:'1',
+    width:'1',
+
+    videoId:videoId,
+
+    playerVars:{
+      autoplay:1
+    },
+
+    events:{
+      onReady:(event)=>{
+
+        event.target.playVideo();
+
+        statusText.innerText =
+        "Audio sedang diputar";
+      },
+
+      onError:()=>{
+
+        statusText.innerText =
+        "Video gagal diputar";
+      }
+    }
+  });
+});
+</script>
+
+</body>
+</html>
