@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>YT Player</title>
+<title>YouTube Audio</title>
 
 <style>
 body{
@@ -20,20 +20,16 @@ input,button{
   margin-top:10px;
 }
 
-button{
-  background:red;
-  color:white;
-  border:none;
-}
-
-#player{
+iframe{
+  width:100%;
+  height:300px;
   margin-top:20px;
 }
 </style>
 </head>
 <body>
 
-<h2>YouTube Player V2</h2>
+<h2>YouTube Audio Player V3</h2>
 
 <input
 id="url"
@@ -43,19 +39,13 @@ placeholder="Paste URL YouTube">
 PLAY
 </button>
 
-<p id="status">Siap</p>
-
-<div id="player"></div>
-
-<script src="https://www.youtube.com/iframe_api"></script>
+<div id="result"></div>
 
 <script>
-let player;
-
-function getId(url){
+function getVideoId(url){
 
   const reg =
-  /(?:youtube\.com.*(?:\?|&)v=|youtu\.be\/)([^&]+)/;
+  /(?:youtube\.com.*v=|youtu\.be\/)([^&]+)/;
 
   const match = url.match(reg);
 
@@ -67,57 +57,23 @@ function playYT(){
   const url =
   document.getElementById("url").value;
 
-  const videoId = getId(url);
+  const id = getVideoId(url);
 
-  if(!videoId){
+  if(!id){
 
-    alert("URL salah");
+    alert("URL tidak valid");
     return;
   }
 
-  document.getElementById("status")
-  .innerText = "Loading...";
-
-  // hapus player lama
-  document.getElementById("player")
-  .innerHTML = "";
-
-  player = new YT.Player('player', {
-
-    height:'300',
-    width:'100%',
-
-    videoId:videoId,
-
-    playerVars:{
-      autoplay:1
-    },
-
-    events:{
-
-      onReady:function(event){
-
-        // unmute penting
-        event.target.unMute();
-
-        // volume
-        event.target.setVolume(100);
-
-        // play
-        event.target.playVideo();
-
-        document.getElementById("status")
-        .innerText = "Sedang diputar";
-      },
-
-      onError:function(e){
-
-        document.getElementById("status")
-        .innerText =
-        "Error code: " + e.data;
-      }
-    }
-  });
+  document.getElementById("result")
+  .innerHTML = `
+    <iframe
+      src="https://www.youtube.com/embed/${id}?autoplay=1"
+      frameborder="0"
+      allow="autoplay"
+      allowfullscreen>
+    </iframe>
+  `;
 }
 </script>
 
