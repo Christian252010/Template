@@ -1,10 +1,8 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>YouTube Audio</title>
 
 <style>
 body{
@@ -27,32 +25,33 @@ iframe{
 }
 </style>
 </head>
+
 <body>
 
-<h2>YouTube Audio Player V3</h2>
+<h2>YouTube Player V4</h2>
 
 <input
 id="url"
 placeholder="Paste URL YouTube">
 
-<button onclick="playYT()">
+<button onclick="playVideo()">
 PLAY
 </button>
 
-<div id="result"></div>
+<div id="player"></div>
 
 <script>
 function getVideoId(url){
 
   const reg =
-  /(?:youtube\.com.*v=|youtu\.be\/)([^&]+)/;
+  /(?:youtube\.com.*(?:\?|&)v=|youtu\.be\/)([^&]+)/;
 
   const match = url.match(reg);
 
   return match ? match[1] : null;
 }
 
-function playYT(){
+function playVideo(){
 
   const url =
   document.getElementById("url").value;
@@ -65,14 +64,14 @@ function playYT(){
     return;
   }
 
-  document.getElementById("result")
+  document.getElementById("player")
   .innerHTML = `
-    <iframe
-      src="https://www.youtube.com/embed/${id}?autoplay=1"
-      frameborder="0"
-      allow="autoplay"
-      allowfullscreen>
-    </iframe>
+  <iframe
+    src="https://www.youtube.com/embed/${id}?autoplay=1&playsinline=1"
+    frameborder="0"
+    allow="autoplay; encrypted-media"
+    allowfullscreen>
+  </iframe>
   `;
 }
 </script>
