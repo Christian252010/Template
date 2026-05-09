@@ -1,46 +1,106 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Background Music Player</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+
+<meta name="theme-color" content="#111111">
+
 <style>
 body{
+  margin:0;
   background:#111;
   color:white;
   font-family:Arial;
   padding:20px;
 }
 
-input,button{
+.card{
+  max-width:500px;
+  margin:auto;
+  background:#1c1c1c;
+  padding:20px;
+  border-radius:20px;
+}
+
+h2{
+  text-align:center;
+}
+
+input{
   width:100%;
-  padding:12px;
+  padding:14px;
+  border:none;
+  border-radius:10px;
   margin-top:10px;
 }
 
+button{
+  width:100%;
+  padding:14px;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  background:red;
+  color:white;
+  font-size:16px;
+}
+
+#player{
+  margin-top:20px;
+}
+
+/* jangan hide total */
 iframe{
   width:100%;
-  height:300px;
-  margin-top:20px;
+  height:220px;
+  border:none;
+  border-radius:10px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>YouTube Player V4</h2>
+<div class="card">
+
+<h2>YouTube Background Player</h2>
 
 <input
+type="text"
 id="url"
 placeholder="Paste URL YouTube">
 
-<button onclick="playVideo()">
-PLAY
+<button onclick="playMusic()">
+PLAY MUSIC
 </button>
+
+<p id="status">
+Siap memutar
+</p>
 
 <div id="player"></div>
 
+</div>
+
 <script>
+
+// Media Session API
+if ('mediaSession' in navigator) {
+
+  navigator.mediaSession.metadata =
+  new MediaMetadata({
+    title: 'Music Player',
+    artist: 'Web Player'
+  });
+}
+
+// ambil id youtube
 function getVideoId(url){
 
   const reg =
@@ -51,12 +111,13 @@ function getVideoId(url){
   return match ? match[1] : null;
 }
 
-function playVideo(){
+function playMusic(){
 
   const url =
   document.getElementById("url").value;
 
-  const id = getVideoId(url);
+  const id =
+  getVideoId(url);
 
   if(!id){
 
@@ -64,16 +125,31 @@ function playVideo(){
     return;
   }
 
+  document.getElementById("status")
+  .innerText =
+  "Memutar audio...";
+
+  // embed youtube
   document.getElementById("player")
   .innerHTML = `
   <iframe
     src="https://www.youtube.com/embed/${id}?autoplay=1&playsinline=1"
-    frameborder="0"
     allow="autoplay; encrypted-media"
     allowfullscreen>
   </iframe>
   `;
 }
+
+// register service worker
+if('serviceWorker' in navigator){
+
+  navigator.serviceWorker
+  .register('sw.js')
+  .then(()=>{
+    console.log("SW aktif");
+  });
+}
+
 </script>
 
 </body>
