@@ -19,6 +19,15 @@ import {
     setDoc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
+import {
+    collection,
+    addDoc,
+    getDocs,
+    deleteDoc,
+    limit
+}
+from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
 /* ================= FIREBASE ================= */
 
 const firebaseConfig = {
@@ -51,6 +60,23 @@ const player = document.getElementById("playerFrame");
 const replyPreview = document.getElementById("replyPreview");
 const replyText = document.getElementById("replyText");
 const cancelReply = document.getElementById("cancelReply");
+const queueBtn =
+document.getElementById("queueBtn");
+
+const queuePanel =
+document.getElementById("queuePanel");
+
+const deafenBtn =
+document.getElementById("deafenBtn");
+
+const toggleVideoBtn =
+document.getElementById("toggleVideoBtn");
+
+const skipBtn =
+document.getElementById("skipBtn");
+
+const player =
+document.getElementById("playerFrame");
 
 /* ================= STATE ================= */
 
@@ -342,9 +368,6 @@ deafenBtn.onclick = ()=>{
     deafened = !deafened;
 
 };
-
-youtubePlayer.mute();
-youtubePlayer.unMute();
 
 toggleVideoBtn.onclick = ()=>{
 
