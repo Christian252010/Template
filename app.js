@@ -318,217 +318,34 @@ cancelReply.onclick = ()=>{
 
 async function sendMessage(){
 
-    const text =
-    input.value.trim();
+    try{
 
-    if(!text) return;
+        const text =
+        input.value.trim();
 
-    if(!currentUser){
+        if(!text) return;
 
-        alert(
-            "Login terlebih dahulu"
-        );
-
-        return;
-
-    }
-
-    /* =====================
-       /PLAY
-    ===================== */
-
-    if(
-        text.startsWith("/play")
-    ){
-
-        const raw =
-        text.replace(
-            "/play",
-            ""
-        ).trim();
-
-        const id =
-        getYoutubeId(raw);
-
-        if(!id){
+        if(!currentUser){
 
             alert(
-                "Link YouTube tidak valid"
+                "Login terlebih dahulu"
             );
 
             return;
 
         }
 
-        const roomSnap =
-        await getDoc(
-            doc(
-                db,
-                "room",
-                "main"
-            )
+        // BIARKAN SEMUA KODE YANG SUDAH ADA
+
+    }catch(err){
+
+        console.error(err);
+
+        alert(
+            err.message
         );
-
-        const roomData =
-        roomSnap.data();
-
-        if(
-            roomData &&
-            roomData.videoId
-        ){
-
-            await addDoc(
-                collection(
-                    db,
-                    "queue"
-                ),
-                {
-                    videoId:id,
-                    addedBy:
-                    currentUser.displayName,
-                    timestamp:
-                    serverTimestamp()
-                }
-            );
-
-        }else{
-
-            await setDoc(
-                doc(
-                    db,
-                    "room",
-                    "main"
-                ),
-                {
-                    videoId:id,
-                    startedAt:
-                    serverTimestamp(),
-                    status:
-                    "playing"
-                }
-            );
-
-        }
-
-        await addDoc(
-            collection(
-                db,
-                "messages"
-            ),
-            {
-                uid:
-                currentUser.uid,
-
-                name:
-                currentUser.displayName,
-
-                photo:
-                currentUser.photoURL,
-
-                message:
-                text,
-
-                system:true,
-
-                timestamp:
-                serverTimestamp()
-            }
-        );
-
-        input.value="";
-
-        return;
 
     }
-
-    /* =====================
-       /STOP
-    ===================== */
-
-    if(
-        text === "/stop"
-    ){
-
-        await setDoc(
-            doc(
-                db,
-                "room",
-                "main"
-            ),
-            {
-                videoId:"",
-                status:"stopped",
-                startedAt:null
-            }
-        );
-
-        await addDoc(
-            collection(
-                db,
-                "messages"
-            ),
-            {
-                uid:
-                currentUser.uid,
-
-                name:
-                currentUser.displayName,
-
-                photo:
-                currentUser.photoURL,
-
-                message:
-                "/stop",
-
-                system:true,
-
-                timestamp:
-                serverTimestamp()
-            }
-        );
-
-        input.value="";
-
-        return;
-
-    }
-
-    /* =====================
-       NORMAL CHAT
-    ===================== */
-
-    await addDoc(
-        collection(
-            db,
-            "messages"
-        ),
-        {
-            uid:
-            currentUser.uid,
-
-            name:
-            currentUser.displayName,
-
-            photo:
-            currentUser.photoURL,
-
-            message:
-            text,
-
-            timestamp:
-            serverTimestamp(),
-
-            replyTo:
-            replyData
-        }
-    );
-
-    replyData = null;
-
-    replyPreview.style.display =
-    "none";
-
-    input.value = "";
 
 }
 
