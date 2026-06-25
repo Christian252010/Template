@@ -114,16 +114,22 @@ async function sendMessage() {
     }
 
     /* PLAY SYSTEM (ROOM SYNC) */
-    if (text.startsWith("/play ")) {
-        const id = getYoutubeId(text.replace("/play ", ""));
+    if (text.startsWith("/play")) {
 
-        if (id) {
-            await setDoc(doc(db, "room", "main"), {
-                videoId: id,
-                updatedAt: Date.now()
-            });
+        const url = text.replace("/play", "").trim();
+    
+        const id = getYoutubeId(url);
+    
+        if (!id) {
+            alert("Link YouTube tidak valid");
+            return;
         }
-
+    
+        await setDoc(doc(db, "room", "main"), {
+            videoId: id,
+            updatedAt: Date.now()
+        });
+    
         input.value = "";
         return;
     }
