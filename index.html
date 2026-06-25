@@ -1,25 +1,220 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music Room</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Room Demo</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Arial,sans-serif;
+    background:#111;
+    color:white;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+}
+
+.player{
+    width:100%;
+    aspect-ratio:16/9;
+    background:#000;
+}
+
+.player iframe{
+    width:100%;
+    height:100%;
+    border:none;
+}
+
+.chat{
+    flex:1;
+    overflow-y:auto;
+    padding:10px;
+}
+
+.message{
+    margin-bottom:8px;
+    padding:8px 10px;
+    background:#222;
+    border-radius:8px;
+}
+
+.system{
+    color:#4ade80;
+}
+
+.input-area{
+    display:flex;
+    gap:10px;
+    padding:10px;
+    background:#1a1a1a;
+}
+
+input{
+    flex:1;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    outline:none;
+}
+
+button{
+    padding:12px 18px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
+</style>
 </head>
 <body>
 
-    <button id="loginBtn">
-        Login Dengan Google
+<div class="player">
+    <iframe
+        id="player"
+        allow="autoplay; encrypted-media"
+        allowfullscreen>
+    </iframe>
+</div>
+
+<div class="chat" id="chat">
+    <div class="message system">
+        Ketik:
+        <br>
+        /play https://youtu.be/dQw4w9WgXcQ
+    </div>
+</div>
+
+<div class="input-area">
+    <input
+        id="message"
+        placeholder="Tulis pesan atau /play URL">
+        
+    <button id="send">
+        Kirim
     </button>
+</div>
 
-    <hr>
+<script>
 
-    <img id="avatar" width="100" hidden>
+const player =
+document.getElementById("player");
 
-    <h2 id="name"></h2>
+const chat =
+document.getElementById("chat");
 
-    <p id="email"></p>
+const messageInput =
+document.getElementById("message");
 
-    <script type="module" src="app.js"></script>
+const sendBtn =
+document.getElementById("send");
+
+function addMessage(text,isSystem=false){
+
+    const div =
+    document.createElement("div");
+
+    div.className =
+    "message" + (isSystem ? " system" : "");
+
+    div.textContent = text;
+
+    chat.appendChild(div);
+
+    chat.scrollTop =
+    chat.scrollHeight;
+}
+
+function getYoutubeId(url){
+
+    try{
+
+        const u = new URL(url);
+
+        if(
+            u.hostname.includes("youtu.be")
+        ){
+            return u.pathname.slice(1);
+        }
+
+        return u.searchParams.get("v");
+
+    }catch{
+
+        return null;
+
+    }
+
+}
+
+function playVideo(videoId){
+
+    player.src =
+    `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+
+}
+
+function sendMessage(){
+
+    const text =
+    messageInput.value.trim();
+
+    if(!text) return;
+
+    addMessage("Anda: " + text);
+
+    if(
+        text.startsWith("/play ")
+    ){
+
+        const url =
+        text.substring(6).trim();
+
+        const videoId =
+        getYoutubeId(url);
+
+        if(videoId){
+
+            playVideo(videoId);
+
+            addMessage(
+                "▶ Memutar video: " + videoId,
+                true
+            );
+
+        }else{
+
+            addMessage(
+                "❌ URL YouTube tidak valid",
+                true
+            );
+
+        }
+
+    }
+
+    messageInput.value = "";
+
+}
+
+sendBtn.onclick = sendMessage;
+
+messageInput.addEventListener(
+    "keydown",
+    e=>{
+        if(e.key==="Enter"){
+            sendMessage();
+        }
+    }
+);
+
+</script>
 
 </body>
 </html>
