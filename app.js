@@ -79,24 +79,32 @@ onAuthStateChanged(auth, user => {
 /* ================= YOUTUBE ID ================= */
 
 function getYoutubeId(input) {
+
     input = input.trim();
 
-    if (!input.startsWith("http")) return input;
+    // kalau sudah ID langsung
+    if (!input.includes("http") && input.length >= 8) {
+        return input;
+    }
 
     try {
         const url = new URL(input);
 
+        // youtu.be
         if (url.hostname.includes("youtu.be")) {
             return url.pathname.split("/")[1];
         }
 
+        // youtube.com/watch?v=
         const v = url.searchParams.get("v");
         if (v) return v;
 
+        // shorts
         const short = url.pathname.match(/\/shorts\/([^/?]+)/);
         if (short) return short[1];
 
         return null;
+
     } catch {
         return null;
     }
