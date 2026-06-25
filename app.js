@@ -122,34 +122,38 @@ async function sendMessage() {
     }
 
     /* PLAY SYSTEM (ROOM SYNC) */
-    if (text.trim().startsWith("/play")) {
+    if (text.startsWith("/play")) {
 
-        console.log("PLAY COMMAND DETECTED");
-    
         const raw = text.replace("/play", "").trim();
     
         const id = getYoutubeId(raw);
     
-        console.log("VIDEO ID:", id);
-    
-        try {
-    
-            await setDoc(
-                doc(db, "room", "main"),
-                {
-                    videoId: id,
-                    updatedAt: Date.now()
-                }
-            );
-    
-            console.log("ROOM UPDATED");
-    
-        } catch (err) {
-    
-            console.error(err);
-            alert(err.message);
-    
+        if (!id) {
+            alert("Link tidak valid");
+            return;
         }
+    
+        // Update player room
+        await setDoc(
+            doc(db, "room", "main"),
+            {
+                videoId: id,
+                updatedAt: Date.now()
+            }
+        );
+    
+        // Kirim ke chat juga
+        await addDoc(
+            collection(db, "messages"),
+            {
+                uid: auth.currentUser.uid,
+                name: auth.currentUser.displayName,
+                photo: auth.currentUser.photoURL,
+                message: text,
+                timestamp: serverTimestamp(),
+                system: true
+            }
+        );
     
         input.value = "";
         return;
