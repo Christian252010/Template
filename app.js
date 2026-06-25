@@ -53,9 +53,9 @@ const replyText = document.getElementById("replyText");
 const cancelReply = document.getElementById("cancelReply");
 
 /* ================= STATE ================= */
-let currentVideo = "";
 
 let replyData = null;
+let currentVideo = "";
 
 /* ================= LOGIN ================= */
 
@@ -137,7 +137,7 @@ async function sendMessage() {
         // Update player room
         await setDoc(doc(db, "room", "main"), {
             videoId: id,
-            startedAt: Date.now(),
+            startedAt: serverTimestamp(),
             status: "playing"
         });
     
