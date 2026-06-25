@@ -21,19 +21,12 @@ import {
 from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
-
-    apiKey: "ISI_API_KEY",
-
-    authDomain: "ISI_AUTH_DOMAIN",
-
-    projectId: "ISI_PROJECT_ID",
-
-    storageBucket: "ISI_STORAGE_BUCKET",
-
-    messagingSenderId: "ISI_SENDER_ID",
-
-    appId: "ISI_APP_ID"
-
+    apiKey: "AIzaSyAk5vpwEms61MGUMHf42v-5l5YsCKZxPcU",
+    authDomain: "music-e4d6a.firebaseapp.com",
+    projectId: "music-e4d6a",
+    storageBucket: "music-e4d6a.firebasestorage.app",
+    messagingSenderId: "485779946327",
+    appId: "1:485779946327:web:3c8ddebb80c8eab59fdc12"
 };
 
 const app = initializeApp(firebaseConfig);
