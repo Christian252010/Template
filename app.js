@@ -56,6 +56,7 @@ const cancelReply = document.getElementById("cancelReply");
 
 let replyData = null;
 let currentVideo = "";
+let deafened = false;
 
 /* ================= LOGIN ================= */
 
@@ -326,3 +327,35 @@ onSnapshot(roomRef, snap => {
         `&disablekb=1`;
 
 });
+
+queueBtn.onclick = ()=>{
+
+    queuePanel.style.display =
+    queuePanel.style.display === "block"
+        ? "none"
+        : "block";
+
+};
+
+deafenBtn.onclick = ()=>{
+
+    deafened = !deafened;
+
+};
+
+youtubePlayer.mute();
+youtubePlayer.unMute();
+
+toggleVideoBtn.onclick = ()=>{
+
+    player.classList.toggle("hidden");
+
+};
+
+skipBtn.onclick = async ()=>{
+
+    // ambil item queue pertama
+
+    // pindahkan ke room/main
+
+};
