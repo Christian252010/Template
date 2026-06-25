@@ -291,13 +291,29 @@ onSnapshot(roomRef, snap => {
         player.src = "";
         player.style.display = "none";
 
+        currentVideo = "";
+
         return;
     }
 
+    // Jangan reload video yang sama
+    if (
+        currentVideo === data.videoId &&
+        player.src
+    ) {
+        return;
+    }
+
+    currentVideo = data.videoId;
+
+    const startedAt =
+        data.startedAt?.toMillis
+        ? data.startedAt.toMillis()
+        : Date.now();
+
     const elapsed =
         Math.floor(
-            (Date.now() - data.startedAt)
-            / 1000
+            (Date.now() - startedAt) / 1000
         );
 
     player.style.display = "block";
