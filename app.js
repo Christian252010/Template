@@ -75,6 +75,11 @@ document.getElementById("toggleVideoBtn");
 const skipBtn =
 document.getElementById("skipBtn");
 
+const queueList =
+document.getElementById(
+    "queueList"
+);
+
 const player =
 document.getElementById("playerFrame");
 
@@ -150,38 +155,57 @@ async function sendMessage() {
     }
 
     /* PLAY SYSTEM (ROOM SYNC) */
-    if (text.startsWith("/play")) {
-
-        const raw = text.replace("/play", "").trim();
+    if(text.startsWith("/play")){
     
-        const id = getYoutubeId(raw);
+        const raw =
+        text.replace("/play","").trim();
     
-        if (!id) {
+        const id =
+        getYoutubeId(raw);
+    
+        if(!id){
             alert("Link tidak valid");
             return;
         }
     
-        // Update player room
-        await setDoc(doc(db, "room", "main"), {
-            videoId: id,
-            startedAt: serverTimestamp(),
-            status: "playing"
-        });
-    
-        // Kirim ke chat juga
-        await addDoc(
-            collection(db, "messages"),
-            {
-                uid: auth.currentUser.uid,
-                name: auth.currentUser.displayName,
-                photo: auth.currentUser.photoURL,
-                message: text,
-                timestamp: serverTimestamp(),
-                system: true
-            }
+        const room =
+        await getDoc(
+            doc(db,"room","main")
         );
     
-        input.value = "";
+        const roomData =
+        room.data();
+    
+        if(
+            roomData &&
+            roomData.videoId
+        ){
+    
+            await addDoc(
+                collection(db,"queue"),
+                {
+                    videoId:id,
+                    addedBy:
+                    auth.currentUser.displayName,
+                    timestamp:
+                    serverTimestamp()
+                }
+            );
+    
+        }else{
+    
+            await setDoc(
+                doc(db,"room","main"),
+                {
+                    videoId:id,
+                    startedAt:
+                    serverTimestamp()
+                }
+            );
+    
+        }
+    
+        input.value="";
         return;
     }
 
@@ -377,8 +401,88 @@ toggleVideoBtn.onclick = ()=>{
 
 skipBtn.onclick = async ()=>{
 
-    // ambil item queue pertama
+    const q =
+    query(
+        collection(db,"queue"),
+        orderBy("timestamp"),
+        limit(1)
+    );
 
-    // pindahkan ke room/main
+    const snap =
+    await getDocs(q);
+
+    if(snap.empty){
+
+        await setDoc(
+            doc(db,"room","main"),
+            {
+                videoId:"",
+                startedAt:null
+            }
+        );
+
+        return;
+    }
+
+    const first =
+    snap.docs[0];
+
+    const data =
+    first.data();
+
+    await setDoc(
+        doc(db,"room","main"),
+        {
+            videoId:data.videoId,
+            startedAt:
+            serverTimestamp()
+        }
+    );
+
+    await deleteDoc(
+        first.ref
+    );
 
 };
+
+toggleVideoBtn.onclick = ()=>{
+
+    player.classList.toggle(
+        "hidden"
+    );
+
+};
+
+onSnapshot(
+
+    query(
+        collection(db,"queue"),
+        orderBy("timestamp")
+    ),
+
+    snap=>{
+
+        queueList.innerHTML="";
+
+        snap.forEach(doc=>{
+
+            const data =
+            doc.data();
+
+            const div =
+            document.createElement(
+                "div"
+            );
+
+            div.textContent =
+            data.videoId;
+
+            queueList.appendChild(
+                div
+            );
+
+        });
+
+    }
+
+);
