@@ -123,23 +123,114 @@ button{
     color:white;
     cursor:pointer;
 }
+#loginContainer{
+    padding:10px;
+    text-align:center;
+}
+
+#userInfo{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px;
+    background:#1f1f1f;
+}
+
+#avatar{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+}
+
+#replyPreview{
+    display:none;
+    padding:10px;
+    background:#202020;
+    border-left:4px solid #22c55e;
+    justify-content:space-between;
+    align-items:center;
+}
+
+#replyText{
+    flex:1;
+    color:#ccc;
+}
+
+#cancelReply{
+    background:#ef4444;
+}
+
+.msg{
+    display:flex;
+    gap:10px;
+}
+
+.msg-avatar{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+}
+
+.msg-content{
+    flex:1;
+}
+
+.msg-header{
+    display:flex;
+    gap:10px;
+    align-items:center;
+}
+
+.msg-name{
+    color:white;
+    font-weight:600;
+}
+
+.msg-time{
+    color:#888;
+    font-size:12px;
+}
+
+.msg-text{
+    color:#d1d5db;
+    margin-top:4px;
+}
+
+.reply-box{
+    border-left:3px solid #555;
+    padding-left:8px;
+    margin-bottom:6px;
+    color:#999;
+    font-size:13px;
+}
 </style>
 </head>
 <body>
 
 <header>
-🎵 Music Chat Player
+    🎵 Music Room
 </header>
 
 <div id="loginContainer">
     <button id="loginBtn">
-        Login Dengan Google
+        Login Google
     </button>
 </div>
 
-<div id="userInfo">
+<div id="userInfo" style="display:none">
     <img id="avatar">
     <span id="username"></span>
+</div>
+
+<div id="replyPreview" style="display:none">
+
+    <div id="replyText">
+    </div>
+
+    <button id="cancelReply">
+        ✕
+    </button>
+
 </div>
 
 <div class="chat-container" id="chat">
@@ -147,14 +238,17 @@ button{
 </div>
 
 <div class="player">
+
     <iframe
         id="playerFrame"
-        allow="autoplay; encrypted-media"
+        allow="autoplay"
         allowfullscreen>
     </iframe>
+
 </div>
 
 <div class="input-area">
+
     <input
         id="commandInput"
         placeholder="Pesan atau /play URL">
@@ -162,9 +256,13 @@ button{
     <button id="sendBtn">
         Kirim
     </button>
+
 </div>
 
-<script type="module" src="app.js"></script>
+<script
+type="module"
+src="app.js">
+</script>
 
 </body>
 </html>
