@@ -14,6 +14,6 @@ const firebaseConfig = {
     authDomain: "music-e4d6a.firebaseapp.com",
     projectId: "music-e4d6a",
     storageBucket: "music-e4d6a.firebasestorage.app",
-    messagingSenderId: "...",
+    messagingSenderId: "485779946327",
     appId: "..."
 };
