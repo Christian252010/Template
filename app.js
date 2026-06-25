@@ -17,3 +17,57 @@ const firebaseConfig = {
     messagingSenderId: "485779946327",
     appId: "1:485779946327:web:3c8ddebb80c8eab59fdc12"
 };
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+const loginBtn =
+document.getElementById("loginBtn");
+
+loginBtn.onclick = async () => {
+
+    try {
+
+        await signInWithPopup(
+            auth,
+            provider
+        );
+
+    } catch(error) {
+
+        console.error(error);
+
+        alert(error.message);
+
+    }
+
+};
+
+const avatar =
+document.getElementById("avatar");
+
+const name =
+document.getElementById("name");
+
+const email =
+document.getElementById("email");
+
+onAuthStateChanged(auth, user => {
+
+    if(user){
+
+        avatar.hidden = false;
+
+        avatar.src =
+        user.photoURL;
+
+        name.textContent =
+        user.displayName;
+
+        email.textContent =
+        user.email;
+
+    }
+
+});
