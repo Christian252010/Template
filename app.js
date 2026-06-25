@@ -134,13 +134,11 @@ async function sendMessage() {
         }
     
         // Update player room
-        await setDoc(
-            doc(db, "room", "main"),
-            {
-                videoId: id,
-                updatedAt: Date.now()
-            }
-        );
+        await setDoc(doc(db, "room", "main"), {
+            videoId: id,
+            startedAt: Date.now(),
+            status: "playing"
+        });
     
         // Kirim ke chat juga
         await addDoc(
