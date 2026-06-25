@@ -784,3 +784,17 @@ queueBtn.onclick = ()=>{
 settingsBtn.onclick = ()=>{
 
     settingsPanel.style.display =
+
+    settingsPanel.style.display
+    ===
+    "block"
+
+    ?
+
+    "none"
+
+    :
+
+    "block";
+
+};
