@@ -22,12 +22,12 @@ import {
 /* ================= FIREBASE ================= */
 
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyAk5vpwEms61MGUMHf42v-5l5YsCKZxPcU",
+    authDomain: "music-e4d6a.firebaseapp.com",
+    projectId: "music-e4d6a",
+    storageBucket: "music-e4d6a.firebasestorage.app",
+    messagingSenderId: "485779946327",
+    appId: "1:485779946327:web:3c8ddebb80c8eab59fdc12"
 };
 
 const app = initializeApp(firebaseConfig);
