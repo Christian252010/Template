@@ -2,11 +2,6 @@ import { initializeApp }
 from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 
 import {
-  getFirestore
-}
-from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
-
-import {
     getAuth,
     GoogleAuthProvider,
     signInWithPopup,
@@ -14,130 +9,277 @@ import {
 }
 from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    query,
+    orderBy,
+    onSnapshot,
+    serverTimestamp
+}
+from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
 const firebaseConfig = {
-    apiKey: "AIzaSyAk5vpwEms61MGUMHf42v-5l5YsCKZxPcU",
-    authDomain: "music-e4d6a.firebaseapp.com",
-    projectId: "music-e4d6a",
-    storageBucket: "music-e4d6a.firebasestorage.app",
-    messagingSenderId: "485779946327",
-    appId: "1:485779946327:web:3c8ddebb80c8eab59fdc12"
+
+    apiKey: "ISI_API_KEY",
+
+    authDomain: "ISI_AUTH_DOMAIN",
+
+    projectId: "ISI_PROJECT_ID",
+
+    storageBucket: "ISI_STORAGE_BUCKET",
+
+    messagingSenderId: "ISI_SENDER_ID",
+
+    appId: "ISI_APP_ID"
+
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+
 const auth = getAuth(app);
+
+const db = getFirestore(app);
+
 const provider = new GoogleAuthProvider();
 
 const loginBtn =
 document.getElementById("loginBtn");
 
+const userInfo =
+document.getElementById("userInfo");
+
+const avatar =
+document.getElementById("avatar");
+
+const username =
+document.getElementById("username");
+
+const chat =
+document.getElementById("chat");
+
+const input =
+document.getElementById("commandInput");
+
 const sendBtn =
 document.getElementById("sendBtn");
 
-const messageInput =
-document.getElementById("messageInput");
+const player =
+document.getElementById("playerFrame");
 
-loginBtn.onclick = async () => {
+loginBtn.onclick = async ()=>{
 
-    try {
+    try{
 
         await signInWithPopup(
             auth,
             provider
         );
 
-    } catch(error) {
+    }catch(err){
 
-        console.error(error);
-
-        alert(error.message);
+        alert(err.message);
 
     }
 
 };
 
-const avatar =
-document.getElementById("avatar");
+onAuthStateChanged(auth,user=>{
 
-const name =
-document.getElementById("name");
+    if(!user) return;
 
-const email =
-document.getElementById("email");
+    loginBtn.parentElement.style.display =
+    "none";
 
-onAuthStateChanged(auth, user => {
+    userInfo.style.display =
+    "flex";
 
-    if(user){
+    avatar.src =
+    user.photoURL;
 
-        avatar.hidden = false;
-
-        avatar.src =
-        user.photoURL;
-
-        name.textContent =
-        user.displayName;
-
-        email.textContent =
-        user.email;
-
-    }
+    username.textContent =
+    user.displayName;
 
 });
 
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+function getYoutubeId(input){
 
-console.log(db);
+    input = input.trim();
 
-async function sendMessage(){
+    if(!input.startsWith("http")){
 
-    const text =
-    messageInput.value.trim();
-
-    if(!text) return;
-
-    if(!auth.currentUser){
-
-        alert("Belum login");
-
-        return;
+        return input;
 
     }
 
     try{
 
-        await addDoc(
-            collection(db,"messages"),
-            {
-                uid:
-                auth.currentUser.uid,
+        const url =
+        new URL(input);
 
-                name:
-                auth.currentUser.displayName,
+        if(
+            url.hostname.includes(
+                "youtu.be"
+            )
+        ){
 
-                photo:
-                auth.currentUser.photoURL,
+            return url.pathname
+                .split("/")[1];
 
-                message:
-                text,
+        }
 
-                timestamp:
-                serverTimestamp()
-            }
-        );
+        const v =
+        url.searchParams.get("v");
 
-        messageInput.value = "";
+        if(v) return v;
 
-    }catch(error){
+        return null;
 
-        console.error(error);
+    }catch{
 
-        alert(error.message);
+        return null;
 
     }
 
 }
+
+async function sendMessage(){
+
+    const text =
+    input.value.trim();
+
+    if(!text) return;
+
+    if(!auth.currentUser){
+
+        alert(
+            "Silakan login terlebih dahulu"
+        );
+
+        return;
+
+    }
+
+    await addDoc(
+        collection(db,"messages"),
+        {
+            uid:
+            auth.currentUser.uid,
+
+            name:
+            auth.currentUser.displayName,
+
+            photo:
+            auth.currentUser.photoURL,
+
+            message:
+            text,
+
+            timestamp:
+            serverTimestamp()
+        }
+    );
+
+    input.value = "";
+
+}
+
+sendBtn.onclick =
+sendMessage;
+
+input.addEventListener(
+    "keydown",
+    e=>{
+
+        if(e.key==="Enter"){
+
+            sendMessage();
+
+        }
+
+    }
+);
+
+const q =
+query(
+    collection(db,"messages"),
+    orderBy("timestamp")
+);
+
+onSnapshot(
+    q,
+    snapshot=>{
+
+        chat.innerHTML = "";
+
+        snapshot.forEach(doc=>{
+
+            const msg =
+            doc.data();
+
+            const div =
+            document.createElement("div");
+
+            const own =
+            auth.currentUser &&
+            msg.uid ===
+            auth.currentUser.uid;
+
+            div.className =
+            "message " +
+            (own
+                ? "user"
+                : "other");
+
+            div.innerHTML =
+            `<b>${msg.name}</b><br>${msg.message}`;
+
+            chat.appendChild(div);
+
+            if(
+                msg.message.startsWith(
+                    "/play "
+                )
+            ){
+
+                const id =
+                getYoutubeId(
+                    msg.message
+                    .replace(
+                        "/play ",
+                        ""
+                    )
+                );
+
+                if(id){
+
+                    player.style.display =
+                    "block";
+
+                    player.src =
+                    `https://www.youtube.com/embed/${id}?autoplay=1`;
+
+                }
+
+            }
+
+            if(
+                msg.message ===
+                "/stop"
+            ){
+
+                player.src = "";
+
+                player.style.display =
+                "none";
+
+            }
+
+        });
+
+        chat.scrollTop =
+        chat.scrollHeight;
+
+    }
+);
