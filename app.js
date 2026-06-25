@@ -15,5 +15,5 @@ const firebaseConfig = {
     projectId: "music-e4d6a",
     storageBucket: "music-e4d6a.firebasestorage.app",
     messagingSenderId: "485779946327",
-    appId: "..."
+    appId: "1:485779946327:web:3c8ddebb80c8eab59fdc12"
 };
