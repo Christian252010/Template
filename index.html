@@ -211,6 +211,54 @@ button{
 .hidden{
     display:none;
 }
+
+#playerContainer{
+    width:100%;
+    background:#1a1a1a;
+    padding:10px;
+}
+
+#youtubePlayer{
+    width:100%;
+    aspect-ratio:16/9;
+    border-radius:12px;
+    overflow:hidden;
+}
+
+.top-buttons{
+    display:flex;
+    gap:10px;
+    padding:10px;
+}
+
+.controls{
+    display:flex;
+    gap:10px;
+    padding:10px;
+    justify-content:center;
+}
+
+.panel{
+    display:none;
+    padding:10px;
+    background:#1f1f1f;
+}
+
+#queueList{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.queue-item{
+    background:#2d2d2d;
+    padding:10px;
+    border-radius:8px;
+}
+
+.hidden{
+    display:none !important;
+}
 </style>
 </head>
 <body>
@@ -219,25 +267,33 @@ button{
     🎵 Music Room Beta
 </header>
 
+<!-- LOGIN -->
 <div id="loginContainer">
     <button id="loginBtn">
         Login Google
     </button>
 </div>
 
+<!-- USER -->
 <div id="userInfo" style="display:none">
     <img id="avatar">
     <span id="username"></span>
 </div>
+
+<!-- TOP BUTTON -->
 <div class="top-buttons">
+
     <button id="queueBtn">
         📋 Queue
     </button>
+
     <button id="settingsBtn">
         ⚙️
     </button>
+
 </div>
 
+<!-- QUEUE PANEL -->
 <div id="queuePanel" class="panel">
 
     <h3>Queue</h3>
@@ -246,6 +302,7 @@ button{
 
 </div>
 
+<!-- SETTINGS -->
 <div id="settingsPanel" class="panel">
 
     <h3>Audio</h3>
@@ -262,11 +319,19 @@ button{
     </button>
 
     <button id="toggleVideoBtn">
-        🎥 Show Video
+        🎥 Toggle Video
     </button>
 
 </div>
 
+<!-- PLAYER -->
+<div id="playerContainer">
+
+    <div id="youtubePlayer"></div>
+
+</div>
+
+<!-- CONTROL -->
 <div class="controls">
 
     <button id="playBtn">
@@ -287,44 +352,47 @@ button{
 
 </div>
 
-<div class="chat-container" id="chat">
-
+<!-- CHAT -->
+<div
+class="chat-container"
+id="chat">
 </div>
 
-<div class="player" hidden>
+<!-- REPLY -->
+<div
+id="replyPreview">
 
-    <iframe
-        id="playerFrame"
-        allow="autoplay"
-        allowfullscreen>
-    </iframe>
+    <div id="replyText"></div>
 
-<div id="replyPreview" style="display:none">
-
-    <div id="replyText">
-    </div>
-
-    <button id="cancelReply">
+    <button
+    id="cancelReply">
         ✕
     </button>
 
 </div>
-</div>
 
+<!-- INPUT -->
 <div class="input-area">
 
     <input
-        id="commandInput"
-        placeholder="Pesan atau /play URL">
+    id="commandInput"
+    placeholder="Pesan atau /play URL">
 
-    <button id="sendBtn">Kirim</button>
+    <button
+    id="sendBtn">
+        Kirim
+    </button>
 
 </div>
 
+<!-- YOUTUBE API -->
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<!-- APP -->
 <script
 type="module"
 src="app.js">
 </script>
-
+<script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
