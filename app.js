@@ -1,13 +1,11 @@
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 
 import {
     getAuth,
     GoogleAuthProvider,
     signInWithPopup,
     onAuthStateChanged
-}
-from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
 import {
     getFirestore,
@@ -16,263 +14,254 @@ import {
     query,
     orderBy,
     onSnapshot,
-    serverTimestamp
-}
-from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+    serverTimestamp,
+    doc,
+    setDoc
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+/* ================= FIREBASE ================= */
 
 const firebaseConfig = {
-    apiKey: "AIzaSyAk5vpwEms61MGUMHf42v-5l5YsCKZxPcU",
-    authDomain: "music-e4d6a.firebaseapp.com",
-    projectId: "music-e4d6a",
-    storageBucket: "music-e4d6a.firebasestorage.app",
-    messagingSenderId: "485779946327",
-    appId: "1:485779946327:web:3c8ddebb80c8eab59fdc12"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
 };
 
 const app = initializeApp(firebaseConfig);
-
 const auth = getAuth(app);
-
 const db = getFirestore(app);
-
 const provider = new GoogleAuthProvider();
 
-const loginBtn =
-document.getElementById("loginBtn");
+/* ================= ELEMENT ================= */
 
-const userInfo =
-document.getElementById("userInfo");
+const loginBtn = document.getElementById("loginBtn");
+const userInfo = document.getElementById("userInfo");
+const avatar = document.getElementById("avatar");
+const username = document.getElementById("username");
 
-const avatar =
-document.getElementById("avatar");
+const chat = document.getElementById("chat");
+const input = document.getElementById("commandInput");
+const sendBtn = document.getElementById("sendBtn");
 
-const username =
-document.getElementById("username");
+const player = document.getElementById("playerFrame");
 
-const chat =
-document.getElementById("chat");
+const replyPreview = document.getElementById("replyPreview");
+const replyText = document.getElementById("replyText");
+const cancelReply = document.getElementById("cancelReply");
 
-const input =
-document.getElementById("commandInput");
+/* ================= STATE ================= */
 
-const sendBtn =
-document.getElementById("sendBtn");
+let replyData = null;
 
-const player =
-document.getElementById("playerFrame");
+/* ================= LOGIN ================= */
 
-loginBtn.onclick = async ()=>{
-
-    try{
-
-        await signInWithPopup(
-            auth,
-            provider
-        );
-
-    }catch(err){
-
-        alert(err.message);
-
+loginBtn.onclick = async () => {
+    try {
+        await signInWithPopup(auth, provider);
+    } catch (e) {
+        alert(e.message);
     }
-
 };
 
-onAuthStateChanged(auth,user=>{
+onAuthStateChanged(auth, user => {
+    if (!user) return;
 
-    if(!user) return;
+    loginBtn.style.display = "none";
+    userInfo.style.display = "flex";
 
-    loginBtn.parentElement.style.display =
-    "none";
-
-    userInfo.style.display =
-    "flex";
-
-    avatar.src =
-    user.photoURL;
-
-    username.textContent =
-    user.displayName;
-
+    avatar.src = user.photoURL;
+    username.textContent = user.displayName;
 });
 
-function getYoutubeId(input){
+/* ================= YOUTUBE ID ================= */
 
+function getYoutubeId(input) {
     input = input.trim();
 
-    if(!input.startsWith("http")){
+    if (!input.startsWith("http")) return input;
 
-        return input;
+    try {
+        const url = new URL(input);
 
-    }
-
-    try{
-
-        const url =
-        new URL(input);
-
-        if(
-            url.hostname.includes(
-                "youtu.be"
-            )
-        ){
-
-            return url.pathname
-                .split("/")[1];
-
+        if (url.hostname.includes("youtu.be")) {
+            return url.pathname.split("/")[1];
         }
 
-        const v =
-        url.searchParams.get("v");
+        const v = url.searchParams.get("v");
+        if (v) return v;
 
-        if(v) return v;
-
-        return null;
-
-    }catch{
+        const short = url.pathname.match(/\/shorts\/([^/?]+)/);
+        if (short) return short[1];
 
         return null;
-
+    } catch {
+        return null;
     }
-
 }
 
-async function sendMessage(){
+/* ================= SEND MESSAGE ================= */
 
-    const text =
-    input.value.trim();
+async function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
 
-    if(!text) return;
-
-    if(!auth.currentUser){
-
-        alert(
-            "Silakan login terlebih dahulu"
-        );
-
+    if (!auth.currentUser) {
+        alert("Login dulu");
         return;
-
     }
 
-    await addDoc(
-        collection(db,"messages"),
-        {
-            uid:
-            auth.currentUser.uid,
+    /* PLAY SYSTEM (ROOM SYNC) */
+    if (text.startsWith("/play ")) {
+        const id = getYoutubeId(text.replace("/play ", ""));
 
-            name:
-            auth.currentUser.displayName,
-
-            photo:
-            auth.currentUser.photoURL,
-
-            message:
-            text,
-
-            timestamp:
-            serverTimestamp()
-        }
-    );
-
-    input.value = "";
-
-}
-
-sendBtn.onclick =
-sendMessage;
-
-input.addEventListener(
-    "keydown",
-    e=>{
-
-        if(e.key==="Enter"){
-
-            sendMessage();
-
+        if (id) {
+            await setDoc(doc(db, "room", "main"), {
+                videoId: id,
+                updatedAt: Date.now()
+            });
         }
 
+        input.value = "";
+        return;
     }
-);
 
-const q =
-query(
-    collection(db,"messages"),
-    orderBy("timestamp")
-);
-
-onSnapshot(
-    q,
-    snapshot=>{
-
-        chat.innerHTML = "";
-
-        snapshot.forEach(doc=>{
-
-            const msg =
-            doc.data();
-
-            const div =
-            document.createElement("div");
-
-            const own =
-            auth.currentUser &&
-            msg.uid ===
-            auth.currentUser.uid;
-
-            div.className =
-            "message " +
-            (own
-                ? "user"
-                : "other");
-
-            div.innerHTML =
-            `<b>${msg.name}</b><br>${msg.message}`;
-
-            chat.appendChild(div);
-
-            if(
-                msg.message.startsWith(
-                    "/play "
-                )
-            ){
-
-                const id =
-                getYoutubeId(
-                    msg.message
-                    .replace(
-                        "/play ",
-                        ""
-                    )
-                );
-
-                if(id){
-
-                    player.style.display =
-                    "block";
-
-                    player.src =
-                    `https://www.youtube.com/embed/${id}?autoplay=1`;
-
-                }
-
-            }
-
-            if(
-                msg.message ===
-                "/stop"
-            ){
-
-                player.src = "";
-
-                player.style.display =
-                "none";
-
-            }
-
+    /* STOP */
+    if (text === "/stop") {
+        await setDoc(doc(db, "room", "main"), {
+            videoId: "",
+            updatedAt: Date.now()
         });
 
-        chat.scrollTop =
-        chat.scrollHeight;
-
+        input.value = "";
+        return;
     }
-);
+
+    /* CHAT MESSAGE */
+    await addDoc(collection(db, "messages"), {
+        uid: auth.currentUser.uid,
+        name: auth.currentUser.displayName,
+        photo: auth.currentUser.photoURL,
+        message: text,
+        timestamp: serverTimestamp(),
+        replyTo: replyData
+    });
+
+    replyData = null;
+    replyPreview.style.display = "none";
+    input.value = "";
+}
+
+sendBtn.onclick = sendMessage;
+
+input.addEventListener("keydown", e => {
+    if (e.key === "Enter") sendMessage();
+});
+
+/* ================= SWIPE REPLY ================= */
+
+function setReply(msg) {
+    replyData = {
+        name: msg.name,
+        message: msg.message
+    };
+
+    replyPreview.style.display = "flex";
+    replyText.innerHTML = `<b>${msg.name}</b><br>${msg.message}`;
+}
+
+cancelReply.onclick = () => {
+    replyData = null;
+    replyPreview.style.display = "none";
+};
+
+/* ================= CHAT REALTIME ================= */
+
+const q = query(collection(db, "messages"), orderBy("timestamp"));
+
+onSnapshot(q, snapshot => {
+    chat.innerHTML = "";
+
+    snapshot.forEach(docSnap => {
+        const msg = docSnap.data();
+
+        const div = document.createElement("div");
+
+        const own = auth.currentUser && msg.uid === auth.currentUser.uid;
+
+        const time = msg.timestamp?.toDate ?
+            msg.timestamp.toDate().toLocaleTimeString("id-ID", {
+                hour: "2-digit",
+                minute: "2-digit"
+            }) : "";
+
+        div.className = "msg";
+
+        div.innerHTML = `
+            <img class="msg-avatar" src="${msg.photo}">
+            
+            <div class="msg-content">
+
+                <div class="msg-header">
+                    <span class="msg-name">${msg.name}</span>
+                    <span class="msg-time">${time}</span>
+                </div>
+
+                ${
+                    msg.replyTo ? `
+                    <div class="reply-box">
+                        <b>${msg.replyTo.name}</b><br>
+                        ${msg.replyTo.message}
+                    </div>
+                    ` : ""
+                }
+
+                <div class="msg-text">
+                    ${msg.message}
+                </div>
+
+            </div>
+        `;
+
+        /* SWIPE RIGHT REPLY */
+        let startX = 0;
+
+        div.addEventListener("touchstart", e => {
+            startX = e.touches[0].clientX;
+        });
+
+        div.addEventListener("touchend", e => {
+            const diff = e.changedTouches[0].clientX - startX;
+
+            if (diff > 80) {
+                setReply(msg);
+            }
+        });
+
+        chat.appendChild(div);
+    });
+
+    chat.scrollTop = chat.scrollHeight;
+});
+
+/* ================= MUSIC ROOM ================= */
+
+const roomRef = doc(db, "room", "main");
+
+onSnapshot(roomRef, snap => {
+    const data = snap.data();
+    if (!data) return;
+
+    if (!data.videoId) {
+        player.src = "";
+        player.style.display = "none";
+        return;
+    }
+
+    player.style.display = "block";
+
+    player.src =
+        `https://www.youtube.com/embed/${data.videoId}?autoplay=1&controls=0&disablekb=1&rel=0&modestbranding=1`;
+});
