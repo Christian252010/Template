@@ -115,13 +115,14 @@ async function sendMessage() {
 
     /* PLAY SYSTEM (ROOM SYNC) */
     if (text.startsWith("/play")) {
-
-        const url = text.replace("/play", "").trim();
     
-        const id = getYoutubeId(url);
+        const raw = text.replace("/play", "").trim();
+    
+        // langsung coba ambil ID
+        const id = getYoutubeId(raw);
     
         if (!id) {
-            alert("Link YouTube tidak valid");
+            alert("Link / ID YouTube tidak valid");
             return;
         }
     
