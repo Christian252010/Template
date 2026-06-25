@@ -171,7 +171,7 @@ async function sendMessage() {
 
 sendBtn.onclick = sendMessage;
 
-input.addEventListener("keydown", (e) => {
+input.addEventListener("keydown", e => {
     if (e.key === "Enter") sendMessage();
 });
 
