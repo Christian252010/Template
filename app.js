@@ -122,22 +122,34 @@ async function sendMessage() {
     }
 
     /* PLAY SYSTEM (ROOM SYNC) */
-    if (text.startsWith("/play")) {
+    if (text.trim().startsWith("/play")) {
+
+        console.log("PLAY COMMAND DETECTED");
     
         const raw = text.replace("/play", "").trim();
     
-        // langsung coba ambil ID
         const id = getYoutubeId(raw);
     
-        if (!id) {
-            alert("Link / ID YouTube tidak valid");
-            return;
-        }
+        console.log("VIDEO ID:", id);
     
-        await setDoc(doc(db, "room", "main"), {
-            videoId: id,
-            updatedAt: Date.now()
-        });
+        try {
+    
+            await setDoc(
+                doc(db, "room", "main"),
+                {
+                    videoId: id,
+                    updatedAt: Date.now()
+                }
+            );
+    
+            console.log("ROOM UPDATED");
+    
+        } catch (err) {
+    
+            console.error(err);
+            alert(err.message);
+    
+        }
     
         input.value = "";
         return;
