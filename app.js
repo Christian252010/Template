@@ -1,34 +1,38 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+/* =========================
+   FIREBASE IMPORT
+========================= */
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 
 import {
     getAuth,
     GoogleAuthProvider,
     signInWithPopup,
     onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+}
+from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
 import {
     getFirestore,
     collection,
     addDoc,
+    getDoc,
+    getDocs,
+    deleteDoc,
     query,
     orderBy,
+    limit,
     onSnapshot,
     serverTimestamp,
     doc,
     setDoc
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
-
-import {
-    collection,
-    addDoc,
-    getDocs,
-    deleteDoc,
-    limit
 }
 from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-/* ================= FIREBASE ================= */
+/* =========================
+   FIREBASE CONFIG
+========================= */
 
 const firebaseConfig = {
     apiKey: "AIzaSyAk5vpwEms61MGUMHf42v-5l5YsCKZxPcU",
@@ -44,27 +48,57 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-/* ================= ELEMENT ================= */
+/* =========================
+   ELEMENT
+========================= */
 
-const loginBtn = document.getElementById("loginBtn");
-const userInfo = document.getElementById("userInfo");
-const avatar = document.getElementById("avatar");
-const username = document.getElementById("username");
+const loginBtn =
+document.getElementById("loginBtn");
 
-const chat = document.getElementById("chat");
-const input = document.getElementById("commandInput");
-const sendBtn = document.getElementById("sendBtn");
+const userInfo =
+document.getElementById("userInfo");
 
-const player = document.getElementById("playerFrame");
+const avatar =
+document.getElementById("avatar");
 
-const replyPreview = document.getElementById("replyPreview");
-const replyText = document.getElementById("replyText");
-const cancelReply = document.getElementById("cancelReply");
+const username =
+document.getElementById("username");
+
+const chat =
+document.getElementById("chat");
+
+const input =
+document.getElementById("commandInput");
+
+const sendBtn =
+document.getElementById("sendBtn");
+
+const replyPreview =
+document.getElementById("replyPreview");
+
+const replyText =
+document.getElementById("replyText");
+
+const cancelReply =
+document.getElementById("cancelReply");
+
 const queueBtn =
 document.getElementById("queueBtn");
 
 const queuePanel =
 document.getElementById("queuePanel");
+
+const queueList =
+document.getElementById("queueList");
+
+const settingsBtn =
+document.getElementById("settingsBtn");
+
+const settingsPanel =
+document.getElementById("settingsPanel");
+
+const volumeSlider =
+document.getElementById("volumeSlider");
 
 const deafenBtn =
 document.getElementById("deafenBtn");
@@ -72,417 +106,681 @@ document.getElementById("deafenBtn");
 const toggleVideoBtn =
 document.getElementById("toggleVideoBtn");
 
+const playBtn =
+document.getElementById("playBtn");
+
+const pauseBtn =
+document.getElementById("pauseBtn");
+
 const skipBtn =
 document.getElementById("skipBtn");
 
-const queueList =
-document.getElementById(
-    "queueList"
-);
+const stopBtn =
+document.getElementById("stopBtn");
 
-const player =
-document.getElementById("playerFrame");
-
-/* ================= STATE ================= */
+/* =========================
+   STATE
+========================= */
 
 let replyData = null;
+
 let currentVideo = "";
+
+let currentUser = null;
+
+let youtubePlayer = null;
+
+let playerReady = false;
+
 let deafened = false;
 
-/* ================= LOGIN ================= */
+let currentRoomData = null;
 
-loginBtn.onclick = async () => {
-    try {
-        await signInWithPopup(auth, provider);
-    } catch (e) {
-        alert(e.message);
+/* =========================
+   LOGIN
+========================= */
+
+loginBtn.onclick = async ()=>{
+
+    try{
+
+        await signInWithPopup(
+            auth,
+            provider
+        );
+
+    }catch(err){
+
+        alert(err.message);
+
     }
+
 };
 
-onAuthStateChanged(auth, user => {
-    if (!user) return;
+/* =========================
+   AUTH STATE
+========================= */
 
-    loginBtn.style.display = "none";
-    userInfo.style.display = "flex";
+onAuthStateChanged(
+    auth,
+    user=>{
 
-    avatar.src = user.photoURL;
-    username.textContent = user.displayName;
-});
+        if(!user){
 
-/* ================= YOUTUBE ID ================= */
+            loginBtn.style.display =
+            "block";
 
-function getYoutubeId(input) {
+            userInfo.style.display =
+            "none";
+
+            return;
+
+        }
+
+        currentUser = user;
+
+        loginBtn.style.display =
+        "none";
+
+        userInfo.style.display =
+        "flex";
+
+        avatar.src =
+        user.photoURL;
+
+        username.textContent =
+        user.displayName;
+
+    }
+);
+
+/* =========================
+   YOUTUBE HELPER
+========================= */
+
+function getYoutubeId(input){
 
     input = input.trim();
 
-    // kalau sudah ID langsung
-    if (!input.includes("http") && input.length >= 8) {
+    if(
+        !input.includes("http")
+    ){
         return input;
     }
 
-    try {
-        const url = new URL(input);
+    try{
 
-        // youtu.be
-        if (url.hostname.includes("youtu.be")) {
-            return url.pathname.split("/")[1];
-        }
+        const url =
+        new URL(input);
 
-        // youtube.com/watch?v=
-        const v = url.searchParams.get("v");
-        if (v) return v;
-
-        // shorts
-        const short = url.pathname.match(/\/shorts\/([^/?]+)/);
-        if (short) return short[1];
-
-        return null;
-
-    } catch {
-        return null;
-    }
-}
-
-/* ================= SEND MESSAGE ================= */
-
-async function sendMessage() {
-    const text = input.value.trim();
-    if (!text) return;
-
-    if (!auth.currentUser) {
-        alert("Login dulu");
-        return;
-    }
-
-    /* PLAY SYSTEM (ROOM SYNC) */
-    if(text.startsWith("/play")){
-    
-        const raw =
-        text.replace("/play","").trim();
-    
-        const id =
-        getYoutubeId(raw);
-    
-        if(!id){
-            alert("Link tidak valid");
-            return;
-        }
-    
-        const room =
-        await getDoc(
-            doc(db,"room","main")
-        );
-    
-        const roomData =
-        room.data();
-    
         if(
-            roomData &&
-            roomData.videoId
+            url.hostname.includes(
+                "youtu.be"
+            )
         ){
-    
-            await addDoc(
-                collection(db,"queue"),
-                {
-                    videoId:id,
-                    addedBy:
-                    auth.currentUser.displayName,
-                    timestamp:
-                    serverTimestamp()
-                }
-            );
-    
-        }else{
-    
-            await setDoc(
-                doc(db,"room","main"),
-                {
-                    videoId:id,
-                    startedAt:
-                    serverTimestamp()
-                }
-            );
-    
+
+            return url.pathname
+                .split("/")[1];
+
         }
-    
-        input.value="";
-        return;
+
+        const v =
+        url.searchParams.get("v");
+
+        if(v){
+            return v;
+        }
+
+        const shorts =
+        url.pathname.match(
+            /\/shorts\/([^/?]+)/
+        );
+
+        if(shorts){
+            return shorts[1];
+        }
+
+        const embed =
+        url.pathname.match(
+            /\/embed\/([^/?]+)/
+        );
+
+        if(embed){
+            return embed[1];
+        }
+
+        return null;
+
+    }catch{
+
+        return null;
+
     }
 
-    /* STOP */
-    if (text === "/stop") {
-        await setDoc(doc(db, "room", "main"), {
-            videoId: "",
-            updatedAt: Date.now()
-        });
-
-        input.value = "";
-        return;
-    }
-
-    /* CHAT MESSAGE */
-    await addDoc(collection(db, "messages"), {
-        uid: auth.currentUser.uid,
-        name: auth.currentUser.displayName,
-        photo: auth.currentUser.photoURL,
-        message: text,
-        timestamp: serverTimestamp(),
-        replyTo: replyData
-    });
-
-    replyData = null;
-    replyPreview.style.display = "none";
-    input.value = "";
 }
 
-sendBtn.onclick = sendMessage;
+/* =========================
+   TIME FORMAT
+========================= */
 
-input.addEventListener("keydown", e => {
-    if (e.key === "Enter") sendMessage();
-});
+function formatTime(timestamp){
 
-/* ================= SWIPE REPLY ================= */
+    if(
+        !timestamp ||
+        !timestamp.toDate
+    ){
+        return "";
+    }
 
-function setReply(msg) {
+    return timestamp
+        .toDate()
+        .toLocaleTimeString(
+            "id-ID",
+            {
+                hour:"2-digit",
+                minute:"2-digit"
+            }
+        );
+
+}
+
+/* =========================
+   REPLY SYSTEM
+========================= */
+
+function setReply(msg){
+
     replyData = {
         name: msg.name,
         message: msg.message
     };
 
-    replyPreview.style.display = "flex";
-    replyText.innerHTML = `<b>${msg.name}</b><br>${msg.message}`;
+    replyPreview.style.display =
+    "flex";
+
+    replyText.innerHTML =
+    `<b>${msg.name}</b><br>${msg.message}`;
+
 }
 
-cancelReply.onclick = () => {
+cancelReply.onclick = ()=>{
+
     replyData = null;
-    replyPreview.style.display = "none";
+
+    replyPreview.style.display =
+    "none";
+
 };
 
-/* ================= CHAT REALTIME ================= */
+/* =========================
+   SEND MESSAGE
+========================= */
 
-const q = query(collection(db, "messages"), orderBy("timestamp"));
+async function sendMessage(){
 
-onSnapshot(q, snapshot => {
-    chat.innerHTML = "";
+    const text =
+    input.value.trim();
 
-    snapshot.forEach(docSnap => {
-        const msg = docSnap.data();
+    if(!text) return;
 
-        const div = document.createElement("div");
+    if(!currentUser){
 
-        const own = auth.currentUser && msg.uid === auth.currentUser.uid;
-
-        const time = msg.timestamp?.toDate ?
-            msg.timestamp.toDate().toLocaleTimeString("id-ID", {
-                hour: "2-digit",
-                minute: "2-digit"
-            }) : "";
-
-        div.className = "msg";
-
-        div.innerHTML = `
-            <img class="msg-avatar" src="${msg.photo}">
-            
-            <div class="msg-content">
-
-                <div class="msg-header">
-                    <span class="msg-name">${msg.name}</span>
-                    <span class="msg-time">${time}</span>
-                </div>
-
-                ${
-                    msg.replyTo ? `
-                    <div class="reply-box">
-                        <b>${msg.replyTo.name}</b><br>
-                        ${msg.replyTo.message}
-                    </div>
-                    ` : ""
-                }
-
-                <div class="msg-text">
-                    ${msg.message}
-                </div>
-
-            </div>
-        `;
-
-        /* SWIPE RIGHT REPLY */
-        let startX = 0;
-
-        div.addEventListener("touchstart", e => {
-            startX = e.touches[0].clientX;
-        });
-
-        div.addEventListener("touchend", e => {
-            const diff = e.changedTouches[0].clientX - startX;
-
-            if (diff > 80) {
-                setReply(msg);
-            }
-        });
-
-        chat.appendChild(div);
-    });
-
-    chat.scrollTop = chat.scrollHeight;
-});
-
-/* ================= MUSIC ROOM ================= */
-
-const roomRef = doc(db, "room", "main");
-
-onSnapshot(roomRef, snap => {
-
-    const data = snap.data();
-
-    if (!data) return;
-
-    if (!data.videoId) {
-
-        player.src = "";
-        player.style.display = "none";
-
-        currentVideo = "";
-
-        return;
-    }
-
-    // Jangan reload video yang sama
-    if (
-        currentVideo === data.videoId &&
-        player.src
-    ) {
-        return;
-    }
-
-    currentVideo = data.videoId;
-
-    const startedAt =
-        data.startedAt?.toMillis
-        ? data.startedAt.toMillis()
-        : Date.now();
-
-    const elapsed =
-        Math.floor(
-            (Date.now() - startedAt) / 1000
+        alert(
+            "Login terlebih dahulu"
         );
 
-    player.style.display = "block";
+        return;
 
-    player.src =
-        `https://www.youtube.com/embed/${data.videoId}` +
-        `?autoplay=1` +
-        `&start=${elapsed}` +
-        `&controls=0` +
-        `&disablekb=1`;
+    }
 
-});
+    /* =====================
+       /PLAY
+    ===================== */
 
-queueBtn.onclick = ()=>{
+    if(
+        text.startsWith("/play")
+    ){
 
-    queuePanel.style.display =
-    queuePanel.style.display === "block"
-        ? "none"
-        : "block";
+        const raw =
+        text.replace(
+            "/play",
+            ""
+        ).trim();
 
-};
+        const id =
+        getYoutubeId(raw);
 
-deafenBtn.onclick = ()=>{
+        if(!id){
 
-    deafened = !deafened;
+            alert(
+                "Link YouTube tidak valid"
+            );
 
-};
+            return;
 
-toggleVideoBtn.onclick = ()=>{
+        }
 
-    player.classList.toggle("hidden");
+        const roomSnap =
+        await getDoc(
+            doc(
+                db,
+                "room",
+                "main"
+            )
+        );
 
-};
+        const roomData =
+        roomSnap.data();
 
-skipBtn.onclick = async ()=>{
+        if(
+            roomData &&
+            roomData.videoId
+        ){
 
-    const q =
-    query(
-        collection(db,"queue"),
-        orderBy("timestamp"),
-        limit(1)
-    );
+            await addDoc(
+                collection(
+                    db,
+                    "queue"
+                ),
+                {
+                    videoId:id,
+                    addedBy:
+                    currentUser.displayName,
+                    timestamp:
+                    serverTimestamp()
+                }
+            );
 
-    const snap =
-    await getDocs(q);
+        }else{
 
-    if(snap.empty){
+            await setDoc(
+                doc(
+                    db,
+                    "room",
+                    "main"
+                ),
+                {
+                    videoId:id,
+                    startedAt:
+                    serverTimestamp(),
+                    status:
+                    "playing"
+                }
+            );
+
+        }
+
+        await addDoc(
+            collection(
+                db,
+                "messages"
+            ),
+            {
+                uid:
+                currentUser.uid,
+
+                name:
+                currentUser.displayName,
+
+                photo:
+                currentUser.photoURL,
+
+                message:
+                text,
+
+                system:true,
+
+                timestamp:
+                serverTimestamp()
+            }
+        );
+
+        input.value="";
+
+        return;
+
+    }
+
+    /* =====================
+       /STOP
+    ===================== */
+
+    if(
+        text === "/stop"
+    ){
 
         await setDoc(
-            doc(db,"room","main"),
+            doc(
+                db,
+                "room",
+                "main"
+            ),
             {
                 videoId:"",
+                status:"stopped",
                 startedAt:null
             }
         );
 
+        await addDoc(
+            collection(
+                db,
+                "messages"
+            ),
+            {
+                uid:
+                currentUser.uid,
+
+                name:
+                currentUser.displayName,
+
+                photo:
+                currentUser.photoURL,
+
+                message:
+                "/stop",
+
+                system:true,
+
+                timestamp:
+                serverTimestamp()
+            }
+        );
+
+        input.value="";
+
         return;
+
     }
 
-    const first =
-    snap.docs[0];
+    /* =====================
+       NORMAL CHAT
+    ===================== */
 
-    const data =
-    first.data();
-
-    await setDoc(
-        doc(db,"room","main"),
+    await addDoc(
+        collection(
+            db,
+            "messages"
+        ),
         {
-            videoId:data.videoId,
-            startedAt:
-            serverTimestamp()
+            uid:
+            currentUser.uid,
+
+            name:
+            currentUser.displayName,
+
+            photo:
+            currentUser.photoURL,
+
+            message:
+            text,
+
+            timestamp:
+            serverTimestamp(),
+
+            replyTo:
+            replyData
         }
     );
 
-    await deleteDoc(
-        first.ref
-    );
+    replyData = null;
 
-};
+    replyPreview.style.display =
+    "none";
 
-toggleVideoBtn.onclick = ()=>{
+    input.value = "";
 
-    player.classList.toggle(
-        "hidden"
-    );
+}
 
-};
+sendBtn.onclick =
+sendMessage;
 
-onSnapshot(
+input.addEventListener(
+    "keydown",
+    e=>{
 
-    query(
-        collection(db,"queue"),
-        orderBy("timestamp")
-    ),
+        if(
+            e.key==="Enter"
+        ){
 
-    snap=>{
+            sendMessage();
 
-        queueList.innerHTML="";
-
-        snap.forEach(doc=>{
-
-            const data =
-            doc.data();
-
-            const div =
-            document.createElement(
-                "div"
-            );
-
-            div.textContent =
-            data.videoId;
-
-            queueList.appendChild(
-                div
-            );
-
-        });
+        }
 
     }
-
 );
+
+/* =========================
+   CHAT REALTIME
+========================= */
+
+const messagesQuery =
+query(
+    collection(
+        db,
+        "messages"
+    ),
+    orderBy(
+        "timestamp"
+    )
+);
+
+onSnapshot(
+    messagesQuery,
+    snapshot=>{
+
+        chat.innerHTML = "";
+
+        snapshot.forEach(
+            docSnap=>{
+
+                const msg =
+                docSnap.data();
+
+                const div =
+                document.createElement(
+                    "div"
+                );
+
+                const time =
+                formatTime(
+                    msg.timestamp
+                );
+
+                div.className =
+                "msg";
+
+                div.innerHTML =
+
+                `
+                <img
+                class="msg-avatar"
+                src="${msg.photo}">
+
+                <div class="msg-content">
+
+                    <div class="msg-header">
+
+                        <span class="msg-name">
+                        ${msg.name}
+                        </span>
+
+                        <span class="msg-time">
+                        ${time}
+                        </span>
+
+                    </div>
+
+                    ${
+                        msg.replyTo
+                        ?
+                        `
+                        <div class="reply-box">
+
+                            <b>
+                            ${msg.replyTo.name}
+                            </b>
+
+                            <br>
+
+                            ${msg.replyTo.message}
+
+                        </div>
+                        `
+                        :
+                        ""
+                    }
+
+                    <div class="msg-text">
+
+                        ${msg.message}
+
+                    </div>
+
+                </div>
+                `;
+
+                let startX = 0;
+
+                div.addEventListener(
+                    "touchstart",
+                    e=>{
+
+                        startX =
+                        e.touches[0]
+                        .clientX;
+
+                    }
+                );
+
+                div.addEventListener(
+                    "touchend",
+                    e=>{
+
+                        const diff =
+                        e.changedTouches[0]
+                        .clientX
+                        -
+                        startX;
+
+                        if(
+                            diff > 80
+                        ){
+
+                            setReply(
+                                msg
+                            );
+
+                        }
+
+                    }
+                );
+
+                chat.appendChild(
+                    div
+                );
+
+            }
+        );
+
+        chat.scrollTop =
+        chat.scrollHeight;
+
+    }
+);
+
+/* =========================
+   QUEUE REALTIME
+========================= */
+
+const queueQuery =
+query(
+    collection(
+        db,
+        "queue"
+    ),
+    orderBy(
+        "timestamp"
+    )
+);
+
+onSnapshot(
+    queueQuery,
+    snapshot=>{
+
+        queueList.innerHTML =
+        "";
+
+        let number = 1;
+
+        snapshot.forEach(
+            docSnap=>{
+
+                const data =
+                docSnap.data();
+
+                const item =
+                document.createElement(
+                    "div"
+                );
+
+                item.className =
+                "queue-item";
+
+                item.innerHTML =
+                `
+                <b>
+                #${number}
+                </b>
+
+                <br>
+
+                ${data.videoId}
+
+                <br>
+
+                <small>
+
+                Ditambahkan oleh
+                ${data.addedBy}
+
+                </small>
+                `;
+
+                queueList.appendChild(
+                    item
+                );
+
+                number++;
+
+            }
+        );
+
+    }
+);
+
+/* =========================
+   PANEL BUTTON
+========================= */
+
+queueBtn.onclick = ()=>{
+
+    queuePanel.style.display =
+
+    queuePanel.style.display
+    ===
+    "block"
+
+    ?
+
+    "none"
+
+    :
+
+    "block";
+
+};
+
+settingsBtn.onclick = ()=>{
+
+    settingsPanel.style.display =
