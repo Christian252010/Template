@@ -798,3 +798,312 @@ settingsBtn.onclick = ()=>{
     "block";
 
 };
+
+/* ================= ROOM PLAYER ================= */
+
+const roomRef =
+doc(db,"room","main");
+
+onSnapshot(
+    roomRef,
+    snap=>{
+
+        const data =
+        snap.data();
+
+        if(!data) return;
+
+        if(!data.videoId){
+
+            player.src = "";
+            player.style.display =
+            "none";
+
+            currentVideo = "";
+
+            return;
+        }
+
+        if(
+            currentVideo ===
+            data.videoId &&
+            player.src
+        ){
+            return;
+        }
+
+        currentVideo =
+        data.videoId;
+
+        const startedAt =
+        data.startedAt?.toMillis
+        ? data.startedAt.toMillis()
+        : Date.now();
+
+        const elapsed =
+        Math.floor(
+            (Date.now()-startedAt)
+            /1000
+        );
+
+        player.style.display =
+        "block";
+
+        player.src =
+        `https://www.youtube.com/embed/${data.videoId}`+
+        `?autoplay=1`+
+        `&start=${elapsed}`+
+        `&controls=0`+
+        `&disablekb=1`+
+        `&rel=0`+
+        `&modestbranding=1`;
+
+    }
+);
+
+/* ================= QUEUE PANEL ================= */
+
+queueBtn.onclick = ()=>{
+
+    queuePanel.style.display =
+    queuePanel.style.display ===
+    "block"
+        ? "none"
+        : "block";
+
+};
+
+onSnapshot(
+
+    query(
+        collection(db,"queue"),
+        orderBy("timestamp")
+    ),
+
+    snap=>{
+
+        queueList.innerHTML = "";
+
+        snap.forEach(docSnap=>{
+
+            const data =
+            docSnap.data();
+
+            const item =
+            document.createElement(
+                "div"
+            );
+
+            item.style.padding =
+            "8px";
+
+            item.style.borderBottom =
+            "1px solid #333";
+
+            item.innerHTML = `
+                <div>
+                    🎵
+                    ${data.videoId}
+                </div>
+                <small>
+                    ${data.addedBy}
+                </small>
+            `;
+
+            queueList.appendChild(
+                item
+            );
+
+        });
+
+    }
+
+);
+
+/* ================= SETTINGS ================= */
+
+settingsBtn.onclick = ()=>{
+
+    settingsPanel.style.display =
+    settingsPanel.style.display ===
+    "block"
+        ? "none"
+        : "block";
+
+};
+
+/* ================= VOLUME ================= */
+
+volumeSlider.addEventListener(
+    "input",
+    ()=>{
+
+        const value =
+        volumeSlider.value;
+
+        player.style.opacity =
+        value / 100;
+
+    }
+);
+
+/* ================= DEAFEN ================= */
+
+deafenBtn.onclick = ()=>{
+
+    deafened = !deafened;
+
+    if(deafened){
+
+        player.style.visibility =
+        "hidden";
+
+        deafenBtn.textContent =
+        "🔊 Undeafen";
+
+    }else{
+
+        player.style.visibility =
+        "visible";
+
+        deafenBtn.textContent =
+        "🔇 Deafen";
+
+    }
+
+};
+
+/* ================= TOGGLE VIDEO ================= */
+
+toggleVideoBtn.onclick = ()=>{
+
+    player.classList.toggle(
+        "hidden"
+    );
+
+};
+
+/* ================= STOP ================= */
+
+stopBtn.onclick = async ()=>{
+
+    await setDoc(
+        doc(db,"room","main"),
+        {
+            videoId:"",
+            startedAt:null
+        }
+    );
+
+};
+
+/* ================= SKIP ================= */
+
+skipBtn.onclick = async ()=>{
+
+    const queueQuery =
+    query(
+        collection(db,"queue"),
+        orderBy("timestamp"),
+        limit(1)
+    );
+
+    const snap =
+    await getDocs(
+        queueQuery
+    );
+
+    if(snap.empty){
+
+        await setDoc(
+            doc(db,"room","main"),
+            {
+                videoId:"",
+                startedAt:null
+            }
+        );
+
+        return;
+    }
+
+    const first =
+    snap.docs[0];
+
+    const data =
+    first.data();
+
+    await setDoc(
+        doc(db,"room","main"),
+        {
+            videoId:
+            data.videoId,
+
+            startedAt:
+            serverTimestamp()
+        }
+    );
+
+    await deleteDoc(
+        first.ref
+    );
+
+};
+
+/* ================= PLAY BUTTON ================= */
+
+playBtn.onclick = ()=>{
+
+    if(player.src){
+
+        const src =
+        player.src;
+
+        player.src = "";
+
+        setTimeout(()=>{
+
+            player.src = src;
+
+        },100);
+
+    }
+
+};
+
+/* ================= PAUSE BUTTON ================= */
+
+/*
+Youtube iframe embed
+tidak bisa dipause
+tanpa Youtube Iframe API.
+
+Untuk sementara
+tombol pause hanya
+menyembunyikan player.
+*/
+
+pauseBtn.onclick = ()=>{
+
+    player.style.display =
+    "none";
+
+};
+
+/* ================= AUTO SCROLL ================= */
+
+function scrollBottom(){
+
+    setTimeout(()=>{
+
+        chat.scrollTop =
+        chat.scrollHeight;
+
+    },100);
+
+}
+
+/* ================= READY ================= */
+
+console.log(
+    "Music Room Ready"
+);
