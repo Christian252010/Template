@@ -53,6 +53,7 @@ const replyText = document.getElementById("replyText");
 const cancelReply = document.getElementById("cancelReply");
 
 /* ================= STATE ================= */
+let currentVideo = "";
 
 let replyData = null;
 
@@ -280,17 +281,32 @@ onSnapshot(q, snapshot => {
 const roomRef = doc(db, "room", "main");
 
 onSnapshot(roomRef, snap => {
+
     const data = snap.data();
+
     if (!data) return;
 
     if (!data.videoId) {
+
         player.src = "";
         player.style.display = "none";
+
         return;
     }
+
+    const elapsed =
+        Math.floor(
+            (Date.now() - data.startedAt)
+            / 1000
+        );
 
     player.style.display = "block";
 
     player.src =
-        `https://www.youtube.com/embed/${data.videoId}?autoplay=1&controls=0&disablekb=1&rel=0&modestbranding=1`;
+        `https://www.youtube.com/embed/${data.videoId}` +
+        `?autoplay=1` +
+        `&start=${elapsed}` +
+        `&controls=0` +
+        `&disablekb=1`;
+
 });
