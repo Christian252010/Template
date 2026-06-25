@@ -31,6 +31,12 @@ const provider = new GoogleAuthProvider();
 const loginBtn =
 document.getElementById("loginBtn");
 
+const sendBtn =
+document.getElementById("sendBtn");
+
+const messageInput =
+document.getElementById("messageInput");
+
 loginBtn.onclick = async () => {
 
     try {
@@ -86,3 +92,52 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 console.log(db);
+
+async function sendMessage(){
+
+    const text =
+    messageInput.value.trim();
+
+    if(!text) return;
+
+    if(!auth.currentUser){
+
+        alert("Belum login");
+
+        return;
+
+    }
+
+    try{
+
+        await addDoc(
+            collection(db,"messages"),
+            {
+                uid:
+                auth.currentUser.uid,
+
+                name:
+                auth.currentUser.displayName,
+
+                photo:
+                auth.currentUser.photoURL,
+
+                message:
+                text,
+
+                timestamp:
+                serverTimestamp()
+            }
+        );
+
+        messageInput.value = "";
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(error.message);
+
+    }
+
+}
