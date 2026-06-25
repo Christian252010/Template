@@ -203,6 +203,14 @@ button{
     color:#999;
     font-size:13px;
 }
+
+.panel{
+    display:none;
+}
+
+.hidden{
+    display:none;
+}
 </style>
 </head>
 <body>
@@ -221,7 +229,63 @@ button{
     <img id="avatar">
     <span id="username"></span>
 </div>
+<div class="top-buttons">
+    <button id="queueBtn">
+        📋 Queue
+    </button>
+    <button id="settingsBtn">
+        ⚙️
+    </button>
+</div>
 
+<div id="queuePanel" class="panel">
+
+    <h3>Queue</h3>
+
+    <div id="queueList"></div>
+
+</div>
+
+<div id="settingsPanel" class="panel">
+
+    <h3>Audio</h3>
+
+    <input
+        type="range"
+        id="volumeSlider"
+        min="0"
+        max="100"
+        value="100">
+
+    <button id="deafenBtn">
+        🔇 Deafen
+    </button>
+
+    <button id="toggleVideoBtn">
+        🎥 Show Video
+    </button>
+
+</div>
+
+<div class="controls">
+
+    <button id="playBtn">
+        ▶
+    </button>
+
+    <button id="pauseBtn">
+        ⏸
+    </button>
+
+    <button id="skipBtn">
+        ⏭
+    </button>
+
+    <button id="stopBtn">
+        ⏹
+    </button>
+
+</div>
 
 <div class="chat-container" id="chat">
 
